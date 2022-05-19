@@ -1,6 +1,10 @@
 defmodule Distcount.Counters.CounterLog do
-  @moduledoc false
+  @moduledoc """
+  CounterLog schema.
+  """
+
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @typedoc "Counter's type"

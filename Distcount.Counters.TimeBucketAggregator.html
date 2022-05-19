@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.2">
+    <meta name="project" content="distcount v0.1.0">
+
+    <title>Distcount.Counters.TimeBucketAggregator — distcount v0.1.0</title>
+    <link rel="stylesheet" href="dist/elixir-69d615db1d0fc8b2ce48.css" />
+
+    <script src="dist/sidebar_items-46181594e2.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-073abeeda7b7e6d5d7e9.js"></script>
+
+
+  </head>
+  <body data-type="modules">
+    <script>
+
+      try {
+        if (localStorage.getItem('night-mode') === 'true') {
+          document.body.classList.add('night-mode');
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="api-reference.html" class="sidebar-projectName" translate="no">
+distcount
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.1.0
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+  <span translate="no">Distcount.Counters.TimeBucketAggregator</span> 
+  <small class="app-vsn" translate="no">(distcount v0.1.0)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Time bucket aggregator for counters.</p><p>The main idea of this module is to aggregate counter logs by time slot, where
+the time slot is the offloading interval (interval for offloading the counter
+logs to the database to sync state).</p><p>Since the counters are kept in memory (via an ETS table), the idea is to
+offload to the database only the counters that have been updated during the
+last offloading interval. Otherwise, we will end up having a full copy of the
+counters in memory and maybe offloading to the database some counters that
+haven't been even updated. This will be very inefficient and will affect the
+offloading performance significantly as well as it will increase the memory
+consumption very much (depending on the number of counters).</p><h2 id="module-usage" class="section-heading">
+  <a href="#module-usage" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">usage</p>
+  </a>
+  Usage
+</h2>
+<p>You can provide your own configuration via config file like so:</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:distcount</span><span class="p">,</span><span class="w"> </span><span class="nc">Distcount.Counters.TimeBucketAggregator</span><span class="p">,</span><span class="w">
+  </span><span class="ss">offload_interval</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span></code></pre><p>Check the available options in the <a href="#start_link/1"><code class="inline">start_link/1</code></a> function.</p><h2 id="module-telemetry" class="section-heading">
+  <a href="#module-telemetry" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">telemetry</p>
+  </a>
+  Telemetry
+</h2>
+<p>This module exposes following Telemetry events:</p><ul><li><p><code class="inline">[:counters, :aggregator, :start]</code> - Dispatched when the process starts.</p><ul><li>Measurement: <code class="inline">%{system_time: integer}</code></li><li>Metadata: <code class="inline">%{name: atom}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :stop]</code> - Dispatched when the process stops.</p><ul><li>Measurement: <code class="inline">%{system_time: integer}</code></li><li>Metadata: <code class="inline">%{name: atom, reason: term}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :incr, :start]</code> - Dispatched before the <a href="#incr/3"><code class="inline">incr/3</code></a>
+function is executed.</p><ul><li>Measurement: <code class="inline">%{system_time: integer}</code></li><li>Metadata: <code class="inline">%{counter: binary, amount: integer}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :incr, :stop]</code> - Dispatched after the <a href="#incr/3"><code class="inline">incr/3</code></a>
+function is executed.</p><ul><li>Measurement: <code class="inline">%{duration: integer}</code></li><li>Metadata: <code class="inline">%{counter: binary, amount: integer}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :incr, :exception]</code> - This event should be
+invoked when an error or exception occurs while executing the <a href="#incr/3"><code class="inline">incr/3</code></a>
+function.</p><ul><li><p>Measurement: <code class="inline">%{duration: integer}</code></p></li><li><p>Metadata:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="5420949392-1">%{</span><span class="w">
+  </span><span class="ss">counter</span><span class="p">:</span><span class="w"> </span><span class="n">binary</span><span class="p">,</span><span class="w">
+  </span><span class="ss">amount</span><span class="p">:</span><span class="w"> </span><span class="n">integer</span><span class="p">,</span><span class="w">
+  </span><span class="ss">kind</span><span class="p">:</span><span class="w"> </span><span class="ss">:error</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:exit</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:throw</span><span class="p">,</span><span class="w">
+  </span><span class="ss">reason</span><span class="p">:</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w">
+  </span><span class="ss">stacktrace</span><span class="p">:</span><span class="w"> </span><span class="n">term</span><span class="w">
+</span><span class="p" data-group-id="5420949392-1">}</span></code></pre></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :offload, :start]</code> - Dispatched before the
+offloading process is executed.</p><ul><li>Measurement: <code class="inline">%{system_time: integer}</code></li><li>Metadata: <code class="inline">%{state: state}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :offload, :stop]</code> - Dispatched after the
+offloading process is executed.</p><ul><li>Measurement: <code class="inline">%{duration: integer}</code></li><li>Metadata: <code class="inline">%{state: state}</code></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :offload, :exception]</code> - This event should be
+invoked when an error or exception occurs while executing the offloading.</p><ul><li><p>Measurement: <code class="inline">%{duration: integer}</code></p></li><li><p>Metadata:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4977758225-1">%{</span><span class="w">
+  </span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w">
+  </span><span class="ss">kind</span><span class="p">:</span><span class="w"> </span><span class="ss">:error</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:exit</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:throw</span><span class="p">,</span><span class="w">
+  </span><span class="ss">reason</span><span class="p">:</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w">
+  </span><span class="ss">stacktrace</span><span class="p">:</span><span class="w"> </span><span class="n">term</span><span class="w">
+</span><span class="p" data-group-id="4977758225-1">}</span></code></pre></li></ul></li><li><p><code class="inline">[:counters, :aggregator, :offloaded_logs]</code> - Dispatched after inserting
+the counter logs (offloading process).</p><ul><li>Measurement: <code class="inline">%{system_time: integer}</code></li><li>Metadata: <code class="inline">%{inserted: integer, state: state}</code></li></ul></li></ul>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:state/0" translate="no">state()</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Type for internal state</p></div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#incr/3" translate="no">incr(name_or_pid, counter, amount)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Increments/decrements the <code class="inline">counter</code> by the given <code class="inline">amount</code>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#start_link/1" translate="no">start_link(opts \\ [])</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Starts a new server for the time-bucket defined by the given options <code class="inline">opts</code>.</p></div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:state/0">
+
+  <div class="detail-header">
+    <a href="#t:state/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">state()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <h2>Specs</h2>
+      <div class="specs">
+
+          <pre translate="no">state() :: %Distcount.Counters.TimeBucketAggregator{
+  name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil,
+  offload_interval: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  offload_timer_ref: <a href="https://www.erlang.org/doc/man/timer.html#type-tref">:timer.tref</a>() | nil,
+  pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil,
+  start_time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  tid: <a href="https://www.erlang.org/doc/man/ets.html#type-tid">:ets.tid</a>() | nil
+}</pre>
+
+      </div>
+
+<p>Type for internal state</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="incr/3">
+
+  <div class="detail-header">
+    <a href="#incr/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incr(name_or_pid, counter, amount)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <h2>Specs</h2>
+      <div class="specs">
+
+          <pre translate="no">incr(
+  name_or_pid :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(),
+  counter :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  amount :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
+) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()</pre>
+
+      </div>
+
+<p>Increments/decrements the <code class="inline">counter</code> by the given <code class="inline">amount</code>.</p><h2 id="incr/3-example" class="section-heading">
+  <a href="#incr/3-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="nc">Distcount.Counters.TimeBucketAggregator</span><span class="o">.</span><span class="n">incr</span><span class="p" data-group-id="0807575560-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;counter&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="0807575560-1">)</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="start_link/1">
+
+    <span id="start_link/0"></span>
+
+  <div class="detail-header">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_link(opts \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <h2>Specs</h2>
+      <div class="specs">
+
+          <pre translate="no">start_link(opts :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>Starts a new server for the time-bucket defined by the given options <code class="inline">opts</code>.</p><h2 id="start_link/1-options" class="section-heading">
+  <a href="#start_link/1-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">options</p>
+  </a>
+  Options
+</h2>
+<ul><li><p><code class="inline">:name</code> - An atom defining the name of the server. Defaults <code class="inline">__MODULE__</code>.</p></li><li><p><code class="inline">:offload_interval</code> - Offloading interval in milliseconds (Defaults to
+<code class="inline">10_000</code> - 10 sec).</p></li></ul><h2 id="start_link/1-example" class="section-heading">
+  <a href="#start_link/1-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="nc">Distcount.Counters.TimeBucketAggregator</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="5108246772-1">(</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:test</span><span class="p" data-group-id="5108246772-1">)</span></code></pre>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.2) for the
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>
